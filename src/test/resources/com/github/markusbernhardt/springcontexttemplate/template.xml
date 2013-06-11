@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean name="simple-${env}" class="com.github.markusbernhardt.springcontexttemplate.beans.Simple">
+		<constructor-arg value="constructorData.${env}" />
+		<constructor-arg value="${${env}.constructorValue}" />
+		<property name="propertyValue" value="propertyData.${env}" />
+		<property name="externalizedPropertyValue" value="${${env}.propertyValue}" />
+	</bean>
+
+	<bean name="container-${env}" class="com.github.markusbernhardt.springcontexttemplate.beans.Container"
+		depends-on="simple-${env}">
+		<property name="bean" ref="simple-${env}" />
+		<property name="innerAnonymous">
+			<bean name="inner" class="com.github.markusbernhardt.springcontexttemplate.beans.Simple">
+				<constructor-arg value=""></constructor-arg>
+				<constructor-arg value=""></constructor-arg>
+			</bean>
+		</property>
+	</bean>
+
+</beans>
