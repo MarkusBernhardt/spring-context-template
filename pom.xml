@@ -15,7 +15,7 @@
 	<packaging>jar</packaging>
 
 
-	<name>Spring Import Template</name>
+	<name>Spring Context Template</name>
 	<description>The aim of this project is to provide a reusable Spring configuration module</description>
 	<url>https://github.com/MarkusBernhardt/spring-context-template</url>
 
