@@ -39,13 +39,20 @@ public class ImportStringValueResolver implements StringValueResolver {
 	 */
 	@Override
 	public String resolveStringValue(String value) {
-		StringBuffer sb = new StringBuffer();
-		Matcher matcher = pattern.matcher(value);
-		while (matcher.find()) {
-			matcher.appendReplacement(sb, mappings.get(matcher.group(1)));
-		}
-		matcher.appendTail(sb);
-		return sb.toString();
+		String resolvedValue = value;
+
+		do {
+			value = resolvedValue;
+			StringBuffer sb = new StringBuffer();
+			Matcher matcher = pattern.matcher(value);
+			while (matcher.find()) {
+				matcher.appendReplacement(sb, mappings.get(matcher.group(1)));
+			}
+			matcher.appendTail(sb);
+			resolvedValue = sb.toString();
+		} while (!value.equals(resolvedValue));
+
+		return resolvedValue;
 	}
 
 	/**
