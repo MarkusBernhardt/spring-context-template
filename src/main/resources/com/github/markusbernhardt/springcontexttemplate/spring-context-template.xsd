@@ -8,33 +8,62 @@
 
 	<xsd:element name="import">
 		<xsd:annotation>
-			<xsd:documentation><![CDATA[Specify a XML Bean Definition template resource to import]]></xsd:documentation>
+			<xsd:documentation source="java:org.springframework.core.io.Resource"><![CDATA[
+	Specify a XML bean template definition resource to import
+			]]></xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element name="variable" minOccurs="1" maxOccurs="unbounded">
-					<xsd:annotation>
-						<xsd:documentation><![CDATA[Specify a variable to process in the template resource]]></xsd:documentation>
-					</xsd:annotation>
-					<xsd:complexType>
-						<xsd:attribute name="name" type="xsd:string">
+			<xsd:complexContent>
+				<xsd:restriction base="xsd:anyType">
+					<xsd:sequence>
+						<xsd:element name="variable" minOccurs="0" maxOccurs="unbounded">
 							<xsd:annotation>
-								<xsd:documentation><![CDATA[The name of the variable]]></xsd:documentation>
+								<xsd:documentation><![CDATA[
+	Variable to process in the template resource
+							]]></xsd:documentation>
 							</xsd:annotation>
-						</xsd:attribute>
-						<xsd:attribute name="value" type="xsd:string">
-							<xsd:annotation>
-								<xsd:documentation><![CDATA[The replacement string for the variable]]></xsd:documentation>
-							</xsd:annotation>
-						</xsd:attribute>
-					</xsd:complexType>
-				</xsd:element>
-			</xsd:sequence>
-			<xsd:attribute name="location" type="xsd:string">
-				<xsd:annotation>
-					<xsd:documentation><![CDATA[The relative resource location of the XML file to import]]></xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
+							<xsd:complexType>
+								<xsd:attribute name="name" type="xsd:string">
+									<xsd:annotation>
+										<xsd:documentation><![CDATA[
+	The name of the variable
+										]]></xsd:documentation>
+									</xsd:annotation>
+								</xsd:attribute>
+								<xsd:attribute name="value" type="xsd:string">
+									<xsd:annotation>
+										<xsd:documentation><![CDATA[
+	The replacement string for the variable
+										]]></xsd:documentation>
+									</xsd:annotation>
+								</xsd:attribute>
+							</xsd:complexType>
+						</xsd:element>
+					</xsd:sequence>
+					<xsd:attribute name="resource" type="xsd:string" use="required">
+						<xsd:annotation>
+							<xsd:documentation><![CDATA[
+	The relative resource location of the XML (bean template definition) file
+	to import, for example "myTemplate.xml" or "templates/myTemplate.xml" or "../myTemplate.xml".
+							]]></xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+					<xsd:attribute name="name" type="xsd:string">
+						<xsd:annotation>
+							<xsd:documentation><![CDATA[
+	The name of the variable
+							]]></xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+					<xsd:attribute name="value" type="xsd:string">
+						<xsd:annotation>
+							<xsd:documentation><![CDATA[
+	The replacement string for the variable
+							]]></xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+				</xsd:restriction>
+			</xsd:complexContent>
 		</xsd:complexType>
 	</xsd:element>
 </xsd:schema>

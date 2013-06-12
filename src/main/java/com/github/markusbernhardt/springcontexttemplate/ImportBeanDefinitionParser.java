@@ -57,14 +57,39 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 	 * @param element
 	 *            the import XML DOM element
 	 * @return the created map
+	 * @throws BeanCreationException
+	 *             in case of specifying no, ambiguous or invalid variables
 	 */
 	protected Map<String, String> getVariables(Element element) {
+		Map<String, String> map = new HashMap<String, String>();
+
+		String attributeName = element.getAttribute("name");
+		String attributeValue = element.getAttribute("value");
+		if (attributeName.length() != 0 || attributeValue.length() != 0) {
+			if (attributeName.length() == 0) {
+				throw new BeanCreationException("Missing attribute 'name'");
+			}
+			if (attributeValue.length() == 0) {
+				throw new BeanCreationException("Missing attribute 'value'");
+			}
+			map.put(attributeName, attributeValue);
+		}
+
 		List<Element> elements = DomUtils.getChildElementsByTagName(element,
 				"variable");
-		Map<String, String> map = new HashMap<String, String>();
-		for (Element replacement : elements) {
-			map.put(replacement.getAttribute("name"),
-					replacement.getAttribute("value"));
+		for (Element variable : elements) {
+			attributeName = variable.getAttribute("name");
+			attributeValue = variable.getAttribute("value");
+			if (map.containsKey(attributeName)) {
+				throw new BeanCreationException(
+						String.format("Ambiguous declaration of varaible '%s'",
+								attributeName));
+			}
+			map.put(attributeName, attributeValue);
+		}
+
+		if (map.size() == 0) {
+			throw new BeanCreationException("No variable defined");
 		}
 		return map;
 	}

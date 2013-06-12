@@ -77,4 +77,54 @@ public class TemplateTest {
 		assertArrayEquals(new String[] { "simple-dev" },
 				containerBeanDefinition.getDependsOn());
 	}
+
+	@Test
+	public void testAttributeBeanName() {
+		assertTrue("Bean simple-test must be defined",
+				context.containsBean("simple-test"));
+		assertTrue("Bean container-test must be defined",
+				context.containsBean("container-test"));
+	}
+
+	@Test
+	public void testAttributeBeanClass() {
+		assertEquals(Simple.class, context.getBean("simple-test").getClass());
+		assertEquals(Container.class, context.getBean("container-test")
+				.getClass());
+	}
+
+	@Test
+	public void testAttributeSimpleConstructorValue() {
+		Simple simple = (Simple) context.getBean("simple-test");
+
+		assertEquals("constructorData.dev", simple.getConstructorValue());
+		assertEquals("ExternalizedConstructor",
+				simple.getExternalizedConstructorValue());
+	}
+
+	@Test
+	public void testAttributeSimplePropertyValue() {
+		Simple simple = (Simple) context.getBean("simple-test");
+
+		assertEquals("propertyData.dev", simple.getPropertyValue());
+		assertEquals("ExternalizedProperty",
+				simple.getExternalizedPropertyValue());
+	}
+
+	@Test
+	public void testAttributeContainerPropertyValue() {
+		Container container = (Container) context.getBean("container-test");
+		Simple simple = (Simple) context.getBean("simple-test");
+
+		assertEquals(container.getBean(), simple);
+		assertNotEquals(container.getInnerAnonymous(), simple);
+	}
+
+	@Test
+	public void testAttributeContainerDependsOn() {
+		BeanDefinition containerBeanDefinition = ((GenericApplicationContext) context)
+				.getBeanFactory().getBeanDefinition("container-test");
+		assertArrayEquals(new String[] { "simple-test" },
+				containerBeanDefinition.getDependsOn());
+	}
 }

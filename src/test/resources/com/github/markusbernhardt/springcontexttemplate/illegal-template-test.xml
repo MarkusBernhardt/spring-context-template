@@ -10,7 +10,7 @@
 		http://www.github.bom/markusbernhardt/schema/context-template
 		http://www.github.bom/markusbernhardt/schema/context-template/spring-context-template.xsd">
 
-	<template:import location="classpath:/com/github/markusbernhardt/springcontexttemplate/illegal-template.xml">
+	<template:import resource="classpath:/com/github/markusbernhardt/springcontexttemplate/illegal-template.xml">
 		<template:variable name="env" value="dev" />
 	</template:import>
 

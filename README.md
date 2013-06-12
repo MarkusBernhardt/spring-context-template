@@ -7,6 +7,11 @@ This library provides a templating mechanism for creating XML-based Spring conte
 Usage
 -----
 
+
+
+Dependencies
+------------
+
 If you are using maven, you can use this library by adding the following dependency to your pom.xml:
 
     <dependency>

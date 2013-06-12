@@ -10,8 +10,8 @@
 		http://www.github.bom/markusbernhardt/schema/context-template
 		http://www.github.bom/markusbernhardt/schema/context-template/spring-context-template.xsd">
 
-	<template:import resource="classpath:/com/github/markusbernhardt/springcontexttemplate/missing-template.xml">
-		<template:variable name="env" value="dev" />
-	</template:import>
+	<template:import
+		resource="classpath:/com/github/markusbernhardt/springcontexttemplate/template.xml"
+		name="env" />
 
 </beans>

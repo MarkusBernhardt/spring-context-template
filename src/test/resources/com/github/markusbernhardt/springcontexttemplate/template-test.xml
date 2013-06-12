@@ -15,9 +15,14 @@
 		<property name="location"
 			value="classpath:com/github/markusbernhardt/springcontexttemplate/template-test.properties" />
 	</bean>
-	
-	<template:import location="classpath:/com/github/markusbernhardt/springcontexttemplate/template.xml">
+
+	<template:import
+		resource="classpath:/com/github/markusbernhardt/springcontexttemplate/template.xml">
 		<template:variable name="env" value="dev" />
 	</template:import>
+
+	<template:import
+		resource="classpath:/com/github/markusbernhardt/springcontexttemplate/template.xml"
+		name="env" value="test" />
 
 </beans>
