@@ -29,7 +29,7 @@ public class TemplateTest {
 	}
 
 	@Test
-	public void testBeanName() {
+	public void testElementBeanName() {
 		assertTrue("Bean simple-dev must be defined",
 				context.containsBean("simple-dev"));
 		assertTrue("Bean container-dev must be defined",
@@ -37,32 +37,32 @@ public class TemplateTest {
 	}
 
 	@Test
-	public void testBeanClass() {
+	public void testElementBeanClass() {
 		assertEquals(Simple.class, context.getBean("simple-dev").getClass());
 		assertEquals(Container.class, context.getBean("container-dev")
 				.getClass());
 	}
 
 	@Test
-	public void testSimpleConstructorValue() {
+	public void testElementSimpleConstructorValue() {
 		Simple simple = (Simple) context.getBean("simple-dev");
 
 		assertEquals("constructorData.dev", simple.getConstructorValue());
-		assertEquals("ExternalizedConstructor",
+		assertEquals("ExternalizedConstructorDev",
 				simple.getExternalizedConstructorValue());
 	}
 
 	@Test
-	public void testSimplePropertyValue() {
+	public void testElementSimplePropertyValue() {
 		Simple simple = (Simple) context.getBean("simple-dev");
 
 		assertEquals("propertyData.dev", simple.getPropertyValue());
-		assertEquals("ExternalizedProperty",
+		assertEquals("ExternalizedPropertyDev",
 				simple.getExternalizedPropertyValue());
 	}
 
 	@Test
-	public void testContainerPropertyValue() {
+	public void testElementContainerPropertyValue() {
 		Container container = (Container) context.getBean("container-dev");
 		Simple simple = (Simple) context.getBean("simple-dev");
 
@@ -71,7 +71,7 @@ public class TemplateTest {
 	}
 
 	@Test
-	public void testContainerDependsOn() {
+	public void testElementContainerDependsOn() {
 		BeanDefinition containerBeanDefinition = ((GenericApplicationContext) context)
 				.getBeanFactory().getBeanDefinition("container-dev");
 		assertArrayEquals(new String[] { "simple-dev" },
@@ -97,8 +97,8 @@ public class TemplateTest {
 	public void testAttributeSimpleConstructorValue() {
 		Simple simple = (Simple) context.getBean("simple-test");
 
-		assertEquals("constructorData.dev", simple.getConstructorValue());
-		assertEquals("ExternalizedConstructor",
+		assertEquals("constructorData.test", simple.getConstructorValue());
+		assertEquals("ExternalizedConstructorTest",
 				simple.getExternalizedConstructorValue());
 	}
 
@@ -106,8 +106,8 @@ public class TemplateTest {
 	public void testAttributeSimplePropertyValue() {
 		Simple simple = (Simple) context.getBean("simple-test");
 
-		assertEquals("propertyData.dev", simple.getPropertyValue());
-		assertEquals("ExternalizedProperty",
+		assertEquals("propertyData.test", simple.getPropertyValue());
+		assertEquals("ExternalizedPropertyTest",
 				simple.getExternalizedPropertyValue());
 	}
 

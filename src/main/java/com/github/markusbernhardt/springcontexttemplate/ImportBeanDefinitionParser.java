@@ -95,10 +95,10 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 	}
 
 	/**
-	 * Load bean definitions from the specified resource location.
+	 * Load bean definitions from the specified resource.
 	 * 
 	 * @param element
-	 *            the import XML DOM element containing the resource location
+	 *            the import XML DOM element containing the resource
 	 * @param visitor
 	 *            the visitor to resolve the template variables
 	 * @param valueResolver
@@ -114,7 +114,7 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 		// load bean definitions to the registry
 		BeanDefinitionRegistry registry = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(registry);
-		reader.loadBeanDefinitions(element.getAttribute("location"));
+		reader.loadBeanDefinitions(element.getAttribute("resource"));
 
 		// resolve bean names
 		Map<String, BeanDefinition> beans = new HashMap<String, BeanDefinition>();
