@@ -7,7 +7,27 @@ This library provides a templating mechanism for creating XML-based Spring conte
 Introduction
 ------------
 
+Especially when using spring-batch you are very often defining a large number of very similar beans in the context. Think
+for example about a job that needs to read multiple files you and up with context definitions like:
 
+```xml
+<bean id="personReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+  <property name="lineMapper" ref="personLineMapper"/>
+  <property name="resource" value="${person-input-file}"/>
+</bean> 
+
+<bean id="addressReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+  <property name="lineMapper" ref="addressLineMapper"/>
+  <property name="resource" value="${address-input-file}"/>
+</bean> 
+
+<bean id="contractReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+  <property name="lineMapper" ref="contractLineMapper"/>
+  <property name="resource" value="${contract-input-file}"/>
+</bean> 
+```
+
+And when you also need some writers, line mappers, processors and lots of other stuff, this gets quite annoying very fast. 
 
 Dependencies
 ------------
