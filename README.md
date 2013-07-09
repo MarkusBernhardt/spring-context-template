@@ -7,27 +7,55 @@ This library provides a templating mechanism for creating XML-based Spring conte
 Introduction
 ------------
 
-Especially when using spring-batch you are very often defining a large number of very similar beans in the context. Think
-for example about a job that needs to read multiple files you and up with context definitions like:
+Especially when using spring-batch you are very often defining a large number of very similar beans in the context. When
+you think for example about a job that needs to read multiple files, you end up with context definitions like:
 
 ```xml
-<bean id="personReader" class="org.springframework.batch.item.file.FlatFileItemReader">
-  <property name="lineMapper" ref="personLineMapper"/>
-  <property name="resource" value="${person-input-file}"/>
-</bean> 
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-<bean id="addressReader" class="org.springframework.batch.item.file.FlatFileItemReader">
-  <property name="lineMapper" ref="addressLineMapper"/>
-  <property name="resource" value="${address-input-file}"/>
-</bean> 
+    <!-- address -->
+	<bean id="addressReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+	    <property name="lineMapper" ref="addressLineMapper"/>
+	    <property name="resource" value="${address-input-file}"/>
+	</bean>
+	
+	<bean id="addressWriter" class="org.springframework.batch.item.file.FlatFileItemWriter">
+        <property name="lineAggregator" ref="addressLineAggregator"/>
+        <property name="resource" value="${address-output-file}" />
+    </bean>
+	
+    <!-- address -->
+	<bean id="addressReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+	    <property name="lineMapper" ref="addressLineMapper"/>
+	    <property name="resource" value="${address-input-file}"/>
+	</bean> 
+	
+	<bean id="addressWriter" class="org.springframework.batch.item.file.FlatFileItemWriter">
+        <property name="lineAggregator" ref="addressLineAggregator"/>
+        <property name="resource" value="${address-output-file}" />
+    </bean>
+	
+    <!-- contract -->
+	<bean id="contractReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+	    <property name="lineMapper" ref="contractLineMapper"/>
+	    <property name="resource" value="${contract-input-file}"/>
+	</bean> 
 
-<bean id="contractReader" class="org.springframework.batch.item.file.FlatFileItemReader">
-  <property name="lineMapper" ref="contractLineMapper"/>
-  <property name="resource" value="${contract-input-file}"/>
-</bean> 
+	<bean id="contractWriter" class="org.springframework.batch.item.file.FlatFileItemWriter">
+        <property name="lineAggregator" ref="contractLineAggregator"/>
+        <property name="resource" value="${contract-output-file}" />
+    </bean>
+	
+</beans>
 ```
 
-And when you also need some writers, line mappers, processors and lots of other stuff, this gets quite annoying very fast. 
+This gets quite annoying very fast. 
+
+
+
 
 Dependencies
 ------------
