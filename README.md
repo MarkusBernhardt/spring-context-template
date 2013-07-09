@@ -7,8 +7,9 @@ This library provides a templating mechanism for creating XML-based Spring conte
 Introduction
 ------------
 
-Especially when using spring-batch you are very often defining a large number of very similar beans in the context. The
-spring-context-tmeplate library helps to keep the amount of boilerplate code low:
+We are, especially when using spring-batch, very often defining a large number of very similar beans in the spring
+context. This violates the DRY-principle and makes maintenance sometimes a nightmare. The spring-context-tmeplate library
+helps to avoid most of the boilerplate code:
 
 *context-reader.xml*
 ```xml
