@@ -3,6 +3,7 @@ package com.github.markusbernhardt.springcontexttemplate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.util.StringValueResolver;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
@@ -42,7 +45,8 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 	protected AbstractBeanDefinition parseInternal(Element element,
 			ParserContext parserContext) {
 		Map<String, String> variables = getVariables(element);
-		StringValueResolver resolver = new ImportStringValueResolver(variables);
+        ConfigurableEnvironment environment = (ConfigurableEnvironment) parserContext.getDelegate().getEnvironment();
+        StringValueResolver resolver = new ImportStringValueResolver(variables, environment);
 		BeanDefinitionVisitor visitor = new ImportBeanDefinitionVisitor(
 				resolver);
 		Map<String, BeanDefinition> beanDefinitions = loadBeanDefinitions(
@@ -124,6 +128,13 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 			visitor.visitBeanDefinition(beanDefinition);
 			String resolvedBeanName = valueResolver
 					.resolveStringValue(beanName);
+
+            if (resolvedBeanName.matches("^.*#\\d+$")) {
+                /**
+                 * If it's anonymous bean, then generate unique name for it.
+                 */
+                resolvedBeanName += "--" + UUID.randomUUID().toString();
+            }
 			if (resolvedBeanName.equals(beanName)) {
 				throw new BeanCreationException(String.format(
 						"The bean '%s' is not a template", beanName));
