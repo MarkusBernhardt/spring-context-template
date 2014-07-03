@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.core.env.PropertyResolver;
 import org.springframework.util.StringValueResolver;
 
 public class ImportStringValueResolver implements StringValueResolver {
@@ -17,16 +18,18 @@ public class ImportStringValueResolver implements StringValueResolver {
 	 * The map storing all the mappings
 	 */
 	protected final Map<String, String> mappings;
+    private final PropertyResolver propertyResolver;
 
-	/**
+    /**
 	 * Constructor
-	 * 
-	 * @param map
-	 *            the map containing all value to resolved value mappings
-	 */
-	public ImportStringValueResolver(Map<String, String> mappings) {
+	 *
+     * @param mappings the map containing all value to resolved value mappings
+     * @param propertyResolver global property resolver
+     */
+	public ImportStringValueResolver(Map<String, String> mappings, PropertyResolver propertyResolver) {
 		super();
-		this.pattern = getPattern(mappings);
+        this.propertyResolver = propertyResolver;
+        this.pattern = getPattern(mappings);
 		this.mappings = mappings;
 	}
 
@@ -46,7 +49,8 @@ public class ImportStringValueResolver implements StringValueResolver {
 			StringBuffer sb = new StringBuffer();
 			Matcher matcher = pattern.matcher(value);
 			while (matcher.find()) {
-				matcher.appendReplacement(sb, mappings.get(matcher.group(1)));
+                String val = mappings.get(unbracket(matcher.group(1)));
+                matcher.appendReplacement(sb, propertyResolver.resolvePlaceholders(val));
 			}
 			matcher.appendTail(sb);
 			resolvedValue = sb.toString();
@@ -55,7 +59,12 @@ public class ImportStringValueResolver implements StringValueResolver {
 		return resolvedValue;
 	}
 
-	/**
+    private String unbracket(String expression) {
+        String unbracketed = expression.substring("${".length(), expression.length() - "}".length());
+        return unbracketed;
+    }
+
+    /**
 	 * Build the regex pattern used later to match the variables to replace
 	 * 
 	 * @param mappings
@@ -63,15 +72,17 @@ public class ImportStringValueResolver implements StringValueResolver {
 	 * @return the pattern
 	 */
 	protected Pattern getPattern(Map<String, String> mappings) {
-		String join = "";
+		String join = "|";
 		StringBuilder patternString = new StringBuilder();
-		patternString.append("\\$\\{(");
+
 		for (String key : mappings.keySet()) {
-			patternString.append(join);
-			patternString.append(key);
+            if (patternString.length()>0) {
+			    patternString.append(join);
+            }
+			patternString.append("\\$\\{" + key + "\\}");
 		}
-		patternString.append(")\\}");
-		return Pattern.compile(patternString.toString());
+
+		return Pattern.compile("(" + patternString.toString() + ")");
 	}
 
 }
