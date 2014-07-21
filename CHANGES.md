@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.0.2
+-----
+
+* Added the ability to use anonymous beans and template placeholder resolution. See #. Great thanks to Tomas for this patch. 
+
 1.0.1
 -----
 
