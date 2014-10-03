@@ -1,6 +1,12 @@
 CHANGES
 =======
 
+1.0.3
+-----
+
+* Removed an unneeded import
+* Fix the failed release of 1.0.2 to Maven Central
+
 1.0.2
 -----
 
