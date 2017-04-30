@@ -1,10 +1,5 @@
 package com.github.markusbernhardt.springcontexttemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -22,6 +17,11 @@ import org.springframework.core.env.PropertyResolver;
 import org.springframework.util.StringValueResolver;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+//import java.util.UUID;
 
 public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 
@@ -49,7 +49,7 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 		ConfigurableEnvironment environment = (ConfigurableEnvironment) parserContext.getDelegate().getEnvironment();
 		StringValueResolver resolver = new ImportStringValueResolver(variables, environment);
 		BeanDefinitionVisitor visitor = new ImportBeanDefinitionVisitor(resolver);
-		Map<String, BeanDefinition> beanDefinitions = loadBeanDefinitions(element, visitor, resolver);
+		Map<String, Tuple<BeanDefinition,Boolean>> beanDefinitions = loadBeanDefinitions(element, visitor, resolver);
 		registerBeans(element, parserContext, beanDefinitions);
 		return null;
 	}
@@ -109,7 +109,7 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 	 * @throws BeanDefinitionStoreException
 	 *             in case of loading or parsing errors
 	 */
-	protected Map<String, BeanDefinition> loadBeanDefinitions(Element element, BeanDefinitionVisitor visitor,
+	protected Map<String, Tuple<BeanDefinition,Boolean>> loadBeanDefinitions(Element element, BeanDefinitionVisitor visitor,
 			StringValueResolver valueResolverIn) {
 		ImportStringValueResolver valueResolver = (ImportStringValueResolver)valueResolverIn;
 		// load bean definitions to the registry
@@ -121,9 +121,8 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 		reader.loadBeanDefinitions(resource);
 
 		// resolve bean names
-		Map<String, BeanDefinition> beans = new HashMap<String, BeanDefinition>();
+		Map<String, Tuple<BeanDefinition,Boolean>> beans = new HashMap<String, Tuple<BeanDefinition,Boolean>>();
 		for (String beanNameIteration : registry.getBeanDefinitionNames()) {
-
 		    BeanDefinition beanDefinition = registry.getBeanDefinition(beanNameIteration);
             String beanName = beanNameIteration
                             .replace(propPrefixReplacement,"${")
@@ -131,17 +130,21 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 			visitor.visitBeanDefinition(beanDefinition);
 
 			String resolvedBeanName = valueResolver.resolveStringValue(beanName);
-
+            boolean isAnonymous = false;
 			if (resolvedBeanName.matches("^.*#\\d+$")) {
 				/**
 				 * If it's anonymous bean, then generate unique name for it.
 				 */
-				resolvedBeanName += "--" + UUID.randomUUID().toString();
+//				resolvedBeanName += "--" + UUID.randomUUID().toString();
+                isAnonymous=true;
 			}
-			if (resolvedBeanName.equals(beanName)) {
-				throw new BeanCreationException(String.format("The bean '%s' is not a template", beanName));
-			}
-			beans.put(resolvedBeanName, beanDefinition);
+            /**
+             * Now anonymous beans are imported only once
+             */
+//			if (resolvedBeanName.equals(beanName)) {
+//				throw new BeanCreationException(String.format("The bean '%s' is not a template", beanName));
+//			}
+			beans.put(resolvedBeanName,new Tuple<BeanDefinition,Boolean>(beanDefinition,isAnonymous) );
 		}
 		return beans;
 	}
@@ -157,14 +160,19 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 	 *            the loaded bean definitions
 	 */
 	protected void registerBeans(Element element, ParserContext parserContext,
-			Map<String, BeanDefinition> beanDefinitions) {
+                                 Map<String, Tuple<BeanDefinition,Boolean>> beanDefinitions) {
 		CompositeComponentDefinition compositeDef = new CompositeComponentDefinition(element.getTagName(),
 				parserContext.extractSource(element));
 		parserContext.pushContainingComponent(compositeDef);
 
-		for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
-			parserContext.getRegistry().registerBeanDefinition(entry.getKey(), entry.getValue());
-			parserContext.registerComponent(new BeanComponentDefinition(entry.getValue(), entry.getKey()));
+        BeanDefinitionRegistry registry =  parserContext.getRegistry();
+		for (Map.Entry<String, Tuple<BeanDefinition,Boolean>> entry : beanDefinitions.entrySet()) {
+            String beanName = entry.getKey();
+            BeanDefinition bean =entry.getValue().getKey();
+            if(!registry.containsBeanDefinition(beanName)) {
+                registry.registerBeanDefinition(beanName, bean);
+                parserContext.registerComponent(new BeanComponentDefinition(bean, beanName));
+            }
 		}
 
 		parserContext.popAndRegisterContainingComponent();
