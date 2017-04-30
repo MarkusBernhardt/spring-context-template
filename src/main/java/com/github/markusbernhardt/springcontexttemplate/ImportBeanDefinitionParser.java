@@ -18,12 +18,15 @@ import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.PropertyResolver;
 import org.springframework.util.StringValueResolver;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
 public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 
+    private final String propPrefixReplacement="----";
+    private final String propPostfixReplacement="____";
 	/**
 	 * Central template method to actually parse the supplied {@link Element}
 	 * into one or more {@link BeanDefinition BeanDefinitions}.
@@ -107,17 +110,26 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 	 *             in case of loading or parsing errors
 	 */
 	protected Map<String, BeanDefinition> loadBeanDefinitions(Element element, BeanDefinitionVisitor visitor,
-			StringValueResolver valueResolver) {
+			StringValueResolver valueResolverIn) {
+		ImportStringValueResolver valueResolver = (ImportStringValueResolver)valueResolverIn;
 		// load bean definitions to the registry
 		BeanDefinitionRegistry registry = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(registry);
-		reader.loadBeanDefinitions(element.getAttribute("resource"));
+		String resource = element.getAttribute("resource");
+        PropertyResolver propertyResolver = valueResolver.getPropertyResolver();
+		resource = propertyResolver.resolvePlaceholders(resource);
+		reader.loadBeanDefinitions(resource);
 
 		// resolve bean names
 		Map<String, BeanDefinition> beans = new HashMap<String, BeanDefinition>();
-		for (String beanName : registry.getBeanDefinitionNames()) {
-			BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);
+		for (String beanNameIteration : registry.getBeanDefinitionNames()) {
+
+		    BeanDefinition beanDefinition = registry.getBeanDefinition(beanNameIteration);
+            String beanName = beanNameIteration
+                            .replace(propPrefixReplacement,"${")
+                            .replace(propPostfixReplacement,"}");
 			visitor.visitBeanDefinition(beanDefinition);
+
 			String resolvedBeanName = valueResolver.resolveStringValue(beanName);
 
 			if (resolvedBeanName.matches("^.*#\\d+$")) {

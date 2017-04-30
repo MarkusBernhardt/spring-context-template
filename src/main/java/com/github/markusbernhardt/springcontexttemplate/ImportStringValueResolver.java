@@ -85,4 +85,7 @@ public class ImportStringValueResolver implements StringValueResolver {
 		return Pattern.compile("(" + patternString.toString() + ")");
 	}
 
+	public PropertyResolver getPropertyResolver() {
+		return propertyResolver;
+	}
 }
