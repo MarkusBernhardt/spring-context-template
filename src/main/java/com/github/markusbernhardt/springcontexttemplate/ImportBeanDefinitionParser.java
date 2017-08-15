@@ -18,6 +18,11 @@ import org.springframework.util.StringValueResolver;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +54,12 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 		ConfigurableEnvironment environment = (ConfigurableEnvironment) parserContext.getDelegate().getEnvironment();
 		StringValueResolver resolver = new ImportStringValueResolver(variables, environment);
 		BeanDefinitionVisitor visitor = new ImportBeanDefinitionVisitor(resolver);
-		Map<String, Tuple<BeanDefinition,Boolean>> beanDefinitions = loadBeanDefinitions(element, visitor, resolver);
+		Map<String, Tuple<BeanDefinition,Boolean>> beanDefinitions = null;
+		try {
+			beanDefinitions = loadBeanDefinitions(element, visitor, resolver);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		registerBeans(element, parserContext, beanDefinitions);
 		return null;
 	}
@@ -101,7 +111,7 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 	 *            the import XML DOM element containing the resource
 	 * @param visitor
 	 *            the visitor to resolve the template variables
-	 * @param valueResolver
+	 * @param valueResolverIn
 	 *            the resolver to resolve the bean names
 	 * @return the loaded and resolved beans
 	 * @throws BeanCreationException
@@ -110,7 +120,7 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 	 *             in case of loading or parsing errors
 	 */
 	protected Map<String, Tuple<BeanDefinition,Boolean>> loadBeanDefinitions(Element element, BeanDefinitionVisitor visitor,
-			StringValueResolver valueResolverIn) {
+			StringValueResolver valueResolverIn) throws IOException {
 		ImportStringValueResolver valueResolver = (ImportStringValueResolver)valueResolverIn;
 		// load bean definitions to the registry
 		BeanDefinitionRegistry registry = new DefaultListableBeanFactory();
@@ -118,7 +128,32 @@ public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 		String resource = element.getAttribute("resource");
         PropertyResolver propertyResolver = valueResolver.getPropertyResolver();
 		resource = propertyResolver.resolvePlaceholders(resource);
-		reader.loadBeanDefinitions(resource);
+		resource=resource.replaceAll("\\\\", "/").replaceAll("file:","").replaceAll("//", "/");
+		Path p = Paths.get(new File(resource).toURI());
+		Path op = Paths.get(new File(resource + "_arranged.xml").toURI());
+		String contents = new String(Files.readAllBytes(p));
+		contents = propertyResolver.resolvePlaceholders(contents);
+		boolean anyChange = true;
+		while(anyChange) {
+			boolean anyChangeIn = false;
+			for (String propIn : valueResolver.mappings.keySet()) {
+				String prevContents = contents;
+				contents = contents.replace("${" + propIn + "}", valueResolver.mappings.get(propIn));
+				if(!anyChangeIn && !prevContents.equals(contents)){
+					anyChangeIn=true;
+				}
+			}
+			if(!anyChangeIn){
+				anyChange=false;
+			}
+		}
+		try {
+			Files.delete(op);
+		}catch(Exception e){
+
+		}
+		Files.write(op,contents.getBytes());
+		reader.loadBeanDefinitions("file:" + op.toFile().getAbsolutePath());
 
 		// resolve bean names
 		Map<String, Tuple<BeanDefinition,Boolean>> beans = new HashMap<String, Tuple<BeanDefinition,Boolean>>();

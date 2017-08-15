@@ -33,6 +33,10 @@ public class ImportBeanDefinitionVisitor extends
 			visitDependsOn((AbstractBeanDefinition) beanDefinition);
 		}
 		super.visitBeanDefinition(beanDefinition);
+		//((CamelBeanPostProcessor)beanDefinition).getCamelContext().getRoutes()
+//		if (beanDefinition instanceof CamelBeanPostProcessor) {
+//			visitDependsOn((CamelBeanPostProcessor) beanDefinition);
+//		}
 	}
 
 	protected void visitDependsOn(AbstractBeanDefinition beanDefinition) {
@@ -46,4 +50,37 @@ public class ImportBeanDefinitionVisitor extends
 		}
 		beanDefinition.setDependsOn(allResolved);
 	}
+//	protected void visitRoutes(CamelBeanPostProcessor beanDefinition) {
+//		List<RouteDefinition> routes = beanDefinition.getCamelContext().getRouteDefinitions();
+//		if (routes == null || routes.size() == 0) {
+//			return;
+//		}
+//
+//		for (int i = 0; i < routes.size(); i++) {
+//			RouteDefinition item = routes.get(i);
+//			if(item.getInputs()!=null){
+//				List<FromDefinition> froms = item.getInputs();
+//				for (int f = 0; f < froms.size(); f++) {
+//					FromDefinition from = froms.get(f);
+//					if (from.getUri() != null) {
+//						String uri = from.getUri();
+//						if (uri != null && uri.trim().length() > 0) {
+//							from.setUri(resolveStringValue(uri));
+//						}
+//					}
+//				}
+//				List<ProcessorDefinition<?>> tos = item.getOutputs();
+//				for (int t = 0; t < tos.size(); t++) {
+//					ProcessorDefinition<?> to = tos.get(t);
+//					if (to.getOtherAttributes().containsKey("uri")) {
+//						String uri =  to.att().get(new QName("uri"));
+//						if (uri != null && uri.trim().length() > 0) {
+//							to.getOtherAttributes().remove("uri");
+//							to.getOtherAttributes().put("uri", resolveStringValue(uri));
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
 }
