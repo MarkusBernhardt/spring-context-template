@@ -148,7 +148,7 @@ If you are using maven, you can use this library by adding the following depende
     <dependency>
         <groupId>com.github.markusbernhardt</groupId>
         <artifactId>spring-context-template</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.4</version>
     </dependency>
 
 Without maven you can use this [jar](http://search.maven.org/remotecontent?filepath=com/github/markusbernhardt/spring-context-template/1.0.0/spring-context-template-1.0.0.jar) and provide all required libraries from this [list](DEPENDENCIES.md) on your own.
