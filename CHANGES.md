@@ -1,6 +1,13 @@
 CHANGES
 =======
 
+1.0.4
+-----
+
+* "resource" attribute property resolving. See #2. Many thanks to Mehmet.
+* Beans without a name attribute still to be used with templating: "${" becomes "----" (four times "-") on id and "}" becomes "___" (four times "") on id. See #2. Many thanks to Mehmet.
+* Anonymous beans are inserted only once, no exceptions. See #2. Many thanks to Mehmet.
+
 1.0.3
 -----
 
@@ -10,7 +17,7 @@ CHANGES
 1.0.2
 -----
 
-* Added the ability to use anonymous beans and template placeholder resolution. See #. Great thanks to Tomas for this patch. 
+* Added the ability to use anonymous beans and template placeholder resolution. See #1. Great thanks to Tomas for this patch. 
 
 1.0.1
 -----
