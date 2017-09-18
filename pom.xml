@@ -8,9 +8,9 @@
 		<version>7</version>
 	</parent>
 
-	<groupId>com.github.markusbernhardt.mfyuce</groupId>
+	<groupId>com.github.markusbernhardt</groupId>
 	<artifactId>spring-context-template</artifactId>
-	<version>1.0.4.18-SNAPSHOT</version>
+	<version>1.0.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 
@@ -18,19 +18,11 @@
 	<description>The aim of this project is to provide a reusable Spring configuration module</description>
 	<url>https://github.com/MarkusBernhardt/spring-context-template</url>
 
-	<distributionManagement>
-		<repository>
-			<id>bitek.snapshots</id>
-			<name>Bitek Snapshots Repository</name>
-			<url>http://207.154.203.43:8081/content/repositories/snapshots/</url>
-		</repository>
-	</distributionManagement>
-
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<downloadSources>true</downloadSources>
 		<downloadJavadocs>true</downloadJavadocs>
-		<java.version>1.6</java.version>
+		<java.version>1.7</java.version>
 		<dependency.version.spring>4.3.7.RELEASE</dependency.version.spring>
 		<camel.version>2.18.3</camel.version>
 	</properties>
@@ -76,14 +68,9 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
-		<!--<dependency>-->
-			<!--<groupId>org.apache.camel</groupId>-->
-			<!--<artifactId>camel-spring</artifactId>-->
-			<!--<version>RELEASE</version>-->
-		<!--</dependency>-->
 	</dependencies>
 
 	<build>
@@ -94,8 +81,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.5.1</version>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
 					<encoding>${project.build.sourceEncoding}</encoding>
 					<optimize>true</optimize>
 					<debug>true</debug>

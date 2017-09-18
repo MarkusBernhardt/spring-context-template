@@ -1,5 +1,11 @@
 package com.github.markusbernhardt.springcontexttemplate;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -14,202 +20,182 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertyResolver;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.StringValueResolver;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-//import java.util.UUID;
-
 public class ImportBeanDefinitionParser extends AbstractBeanDefinitionParser {
 
-    private final String propPrefixReplacement="----";
-    private final String propPostfixReplacement="____";
-	/**
-	 * Central template method to actually parse the supplied {@link Element}
-	 * into one or more {@link BeanDefinition BeanDefinitions}.
-	 * 
-	 * @param element
-	 *            the element that is to be parsed into one or more
-	 *            {@link BeanDefinition BeanDefinitions}
-	 * @param parserContext
-	 *            the object encapsulating the current state of the parsing
-	 *            process; provides access to a
-	 *            {@link org.springframework.beans.factory.support.BeanDefinitionRegistry}
-	 * @return the primary {@link BeanDefinition} resulting from the parsing of
-	 *         the supplied {@link Element}
-	 * @see #parse(org.w3c.dom.Element, ParserContext)
-	 * @see #postProcessComponentDefinition(org.springframework.beans.factory.parsing.BeanComponentDefinition)
-	 */
-	@Override
-	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
-		Map<String, String> variables = getVariables(element);
-		ConfigurableEnvironment environment = (ConfigurableEnvironment) parserContext.getDelegate().getEnvironment();
-		StringValueResolver resolver = new ImportStringValueResolver(variables, environment);
-		BeanDefinitionVisitor visitor = new ImportBeanDefinitionVisitor(resolver);
-		Map<String, Tuple<BeanDefinition,Boolean>> beanDefinitions = null;
-		try {
-			beanDefinitions = loadBeanDefinitions(element, visitor, resolver);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		registerBeans(element, parserContext, beanDefinitions);
-		return null;
-	}
+    private final String propPrefixReplacement = "----";
+    private final String propPostfixReplacement = "____";
 
-	/**
-	 * Return a map of all defined variables
-	 * 
-	 * @param element
-	 *            the import XML DOM element
-	 * @return the created map
-	 * @throws BeanCreationException
-	 *             in case of specifying no, ambiguous or invalid variables
-	 */
-	protected Map<String, String> getVariables(Element element) {
-		Map<String, String> map = new HashMap<String, String>();
+    /**
+     * Central template method to actually parse the supplied {@link Element}
+     * into one or more {@link BeanDefinition BeanDefinitions}.
+     * 
+     * @param element
+     *            the element that is to be parsed into one or more
+     *            {@link BeanDefinition BeanDefinitions}
+     * @param parserContext
+     *            the object encapsulating the current state of the parsing
+     *            process; provides access to a
+     *            {@link org.springframework.beans.factory.support.BeanDefinitionRegistry}
+     * @return the primary {@link BeanDefinition} resulting from the parsing of
+     *         the supplied {@link Element}
+     * @see #parse(org.w3c.dom.Element, ParserContext)
+     * @see #postProcessComponentDefinition(org.springframework.beans.factory.parsing.BeanComponentDefinition)
+     */
+    @Override
+    protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
+        Map<String, String> variables = getVariables(element);
+        ConfigurableEnvironment environment = (ConfigurableEnvironment) parserContext.getDelegate().getReaderContext()
+                .getEnvironment();
+        StringValueResolver resolver = new ImportStringValueResolver(variables, environment);
+        BeanDefinitionVisitor visitor = new ImportBeanDefinitionVisitor(resolver);
+        Map<String, Tuple<BeanDefinition, Boolean>> beanDefinitions = loadBeanDefinitions(element, visitor, resolver);
+        registerBeans(element, parserContext, beanDefinitions);
+        return null;
+    }
 
-		String attributeName = element.getAttribute("name");
-		String attributeValue = element.getAttribute("value");
-		if (attributeName.length() != 0 || attributeValue.length() != 0) {
-			if (attributeName.length() == 0) {
-				throw new BeanCreationException("Missing attribute 'name'");
-			}
-			if (attributeValue.length() == 0) {
-				throw new BeanCreationException("Missing attribute 'value'");
-			}
-			map.put(attributeName, attributeValue);
-		}
+    /**
+     * Return a map of all defined variables
+     * 
+     * @param element
+     *            the import XML DOM element
+     * @return the created map
+     * @throws BeanCreationException
+     *             in case of specifying no, ambiguous or invalid variables
+     */
+    protected Map<String, String> getVariables(Element element) {
+        Map<String, String> map = new HashMap<String, String>();
 
-		List<Element> elements = DomUtils.getChildElementsByTagName(element, "variable");
-		for (Element variable : elements) {
-			attributeName = variable.getAttribute("name");
-			attributeValue = variable.getAttribute("value");
-			if (map.containsKey(attributeName)) {
-				throw new BeanCreationException(String.format("Ambiguous declaration of varaible '%s'", attributeName));
-			}
-			map.put(attributeName, attributeValue);
-		}
+        String attributeName = element.getAttribute("name");
+        String attributeValue = element.getAttribute("value");
+        if (attributeName.length() != 0 || attributeValue.length() != 0) {
+            if (attributeName.length() == 0) {
+                throw new BeanCreationException("Missing attribute 'name'");
+            }
+            if (attributeValue.length() == 0) {
+                throw new BeanCreationException("Missing attribute 'value'");
+            }
+            map.put(attributeName, attributeValue);
+        }
 
-		if (map.size() == 0) {
-			throw new BeanCreationException("No variable defined");
-		}
-		return map;
-	}
+        List<Element> elements = DomUtils.getChildElementsByTagName(element, "variable");
+        for (Element variable : elements) {
+            attributeName = variable.getAttribute("name");
+            attributeValue = variable.getAttribute("value");
+            if (map.containsKey(attributeName)) {
+                throw new BeanCreationException(String.format("Ambiguous declaration of varaible '%s'", attributeName));
+            }
+            map.put(attributeName, attributeValue);
+        }
 
-	/**
-	 * Load bean definitions from the specified resource.
-	 * 
-	 * @param element
-	 *            the import XML DOM element containing the resource
-	 * @param visitor
-	 *            the visitor to resolve the template variables
-	 * @param valueResolverIn
-	 *            the resolver to resolve the bean names
-	 * @return the loaded and resolved beans
-	 * @throws BeanCreationException
-	 *             in case of loading non template beans
-	 * @throws BeanDefinitionStoreException
-	 *             in case of loading or parsing errors
-	 */
-	protected Map<String, Tuple<BeanDefinition,Boolean>> loadBeanDefinitions(Element element, BeanDefinitionVisitor visitor,
-			StringValueResolver valueResolverIn) throws IOException {
-		ImportStringValueResolver valueResolver = (ImportStringValueResolver)valueResolverIn;
-		// load bean definitions to the registry
-		BeanDefinitionRegistry registry = new DefaultListableBeanFactory();
-		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(registry);
-		String resource = element.getAttribute("resource");
+        if (map.size() == 0) {
+            throw new BeanCreationException("No variable defined");
+        }
+        return map;
+    }
+
+    /**
+     * Load bean definitions from the specified resource.
+     * 
+     * @param element
+     *            the import XML DOM element containing the resource
+     * @param visitor
+     *            the visitor to resolve the template variables
+     * @param valueResolverIn
+     *            the resolver to resolve the bean names
+     * @return the loaded and resolved beans
+     * @throws BeanCreationException
+     *             in case of loading non template beans
+     * @throws BeanDefinitionStoreException
+     *             in case of loading or parsing errors
+     */
+    protected Map<String, Tuple<BeanDefinition, Boolean>> loadBeanDefinitions(Element element,
+            BeanDefinitionVisitor visitor, StringValueResolver valueResolverIn) {
+        ImportStringValueResolver valueResolver = (ImportStringValueResolver) valueResolverIn;
+
+        // load bean definitions to the registry
+        BeanDefinitionRegistry registry = new DefaultListableBeanFactory();
+        ResourceLoader resourceLoader = new DefaultResourceLoader();
+        XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(registry);
         PropertyResolver propertyResolver = valueResolver.getPropertyResolver();
-		resource = propertyResolver.resolvePlaceholders(resource);
-		resource=resource.replaceAll("\\\\", "/").replaceAll("file:","").replaceAll("//", "/");
-		Path p = Paths.get(new File(resource).toURI());
-		Path op = Paths.get(new File(resource + "_arranged.xml").toURI());
-		String contents = new String(Files.readAllBytes(p));
-		contents = propertyResolver.resolvePlaceholders(contents);
-		boolean anyChange = true;
-		while(anyChange) {
-			boolean anyChangeIn = false;
-			for (String propIn : valueResolver.mappings.keySet()) {
-				String prevContents = contents;
-				contents = contents.replace("${" + propIn + "}", valueResolver.mappings.get(propIn));
-				if(!anyChangeIn && !prevContents.equals(contents)){
-					anyChangeIn=true;
-				}
-			}
-			if(!anyChangeIn){
-				anyChange=false;
-			}
-		}
-		try {
-			Files.delete(op);
-		}catch(Exception e){
 
-		}
-		Files.write(op,contents.getBytes());
-		reader.loadBeanDefinitions("file:" + op.toFile().getAbsolutePath());
+        // load resource
+        String resourceLocation = element.getAttribute("resource");
+        resourceLocation = propertyResolver.resolvePlaceholders(resourceLocation);
+        Resource resource = resourceLoader.getResource(resourceLocation);
 
-		// resolve bean names
-		Map<String, Tuple<BeanDefinition,Boolean>> beans = new HashMap<String, Tuple<BeanDefinition,Boolean>>();
-		for (String beanNameIteration : registry.getBeanDefinitionNames()) {
-		    BeanDefinition beanDefinition = registry.getBeanDefinition(beanNameIteration);
-            String beanName = beanNameIteration
-                            .replace(propPrefixReplacement,"${")
-                            .replace(propPostfixReplacement,"}");
-			visitor.visitBeanDefinition(beanDefinition);
+        // load contents
+        try (Scanner scanner = new Scanner(resource.getInputStream(), "UTF-8")) {
+            String contents = scanner.useDelimiter("\\A").next();
+            contents = propertyResolver.resolvePlaceholders(contents);
 
-			String resolvedBeanName = valueResolver.resolveStringValue(beanName);
-            boolean isAnonymous = false;
-			if (resolvedBeanName.matches("^.*#\\d+$")) {
-				/**
-				 * If it's anonymous bean, then generate unique name for it.
-				 */
-//				resolvedBeanName += "--" + UUID.randomUUID().toString();
-                isAnonymous=true;
-			}
-            /**
-             * Now anonymous beans are imported only once
-             */
-//			if (resolvedBeanName.equals(beanName)) {
-//				throw new BeanCreationException(String.format("The bean '%s' is not a template", beanName));
-//			}
-			beans.put(resolvedBeanName,new Tuple<BeanDefinition,Boolean>(beanDefinition,isAnonymous) );
-		}
-		return beans;
-	}
+            // change contents
+            boolean contentsChanged = true;
+            while (contentsChanged) {
+                String prevContents = contents;
+                for (String propIn : valueResolver.mappings.keySet()) {
+                    contents = contents.replace("${" + propIn + "}", valueResolver.mappings.get(propIn));
+                }
+                contentsChanged = !prevContents.equals(contents);
+            }
 
-	/**
-	 * Register the given beans to the parser context
-	 * 
-	 * @param element
-	 *            the import XML DOM element
-	 * @param parserContext
-	 *            the parser context
-	 * @param beanDefinitions
-	 *            the loaded bean definitions
-	 */
-	protected void registerBeans(Element element, ParserContext parserContext,
-                                 Map<String, Tuple<BeanDefinition,Boolean>> beanDefinitions) {
-		CompositeComponentDefinition compositeDef = new CompositeComponentDefinition(element.getTagName(),
-				parserContext.extractSource(element));
-		parserContext.pushContainingComponent(compositeDef);
+            reader.loadBeanDefinitions(new ByteArrayResource(contents.getBytes("UTF-8")));
 
-        BeanDefinitionRegistry registry =  parserContext.getRegistry();
-		for (Map.Entry<String, Tuple<BeanDefinition,Boolean>> entry : beanDefinitions.entrySet()) {
+            // resolve bean names
+            Map<String, Tuple<BeanDefinition, Boolean>> beans = new HashMap<String, Tuple<BeanDefinition, Boolean>>();
+            for (String beanNameIteration : registry.getBeanDefinitionNames()) {
+                BeanDefinition beanDefinition = registry.getBeanDefinition(beanNameIteration);
+                String beanName = beanNameIteration.replace(propPrefixReplacement, "${").replace(propPostfixReplacement,
+                        "}");
+                visitor.visitBeanDefinition(beanDefinition);
+
+                String resolvedBeanName = valueResolver.resolveStringValue(beanName);
+                boolean isAnonymous = resolvedBeanName.matches("^.*#\\d+$");
+
+                /**
+                 * Now anonymous beans are imported only once
+                 */
+                beans.put(resolvedBeanName, new Tuple<BeanDefinition, Boolean>(beanDefinition, isAnonymous));
+            }
+            return beans;
+        } catch (IOException e) {
+            throw new BeanDefinitionStoreException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Register the given beans to the parser context
+     * 
+     * @param element
+     *            the import XML DOM element
+     * @param parserContext
+     *            the parser context
+     * @param beanDefinitions
+     *            the loaded bean definitions
+     */
+    protected void registerBeans(Element element, ParserContext parserContext,
+            Map<String, Tuple<BeanDefinition, Boolean>> beanDefinitions) {
+        CompositeComponentDefinition compositeDef = new CompositeComponentDefinition(element.getTagName(),
+                parserContext.extractSource(element));
+        parserContext.pushContainingComponent(compositeDef);
+
+        BeanDefinitionRegistry registry = parserContext.getRegistry();
+        for (Map.Entry<String, Tuple<BeanDefinition, Boolean>> entry : beanDefinitions.entrySet()) {
             String beanName = entry.getKey();
-            BeanDefinition bean =entry.getValue().getKey();
-            if(!registry.containsBeanDefinition(beanName)) {
+            BeanDefinition bean = entry.getValue().getKey();
+            if (!registry.containsBeanDefinition(beanName)) {
                 registry.registerBeanDefinition(beanName, bean);
                 parserContext.registerComponent(new BeanComponentDefinition(bean, beanName));
             }
-		}
+        }
 
-		parserContext.popAndRegisterContainingComponent();
-	}
+        parserContext.popAndRegisterContainingComponent();
+    }
 }

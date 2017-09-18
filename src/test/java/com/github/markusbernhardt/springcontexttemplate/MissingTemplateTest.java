@@ -11,15 +11,13 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class MissingTemplateTest {
 
-	@Test
-	public void testMissingTemplate() {
-		try {
-			new ClassPathXmlApplicationContext(
-					"missing-template-test.xml",
-					this.getClass());
-			fail("Exception must be thrown");
-		} catch (BeanDefinitionStoreException e) {
-			assertTrue(e.getCause() instanceof FileNotFoundException);
-		}
-	}
+    @Test
+    public void testMissingTemplate() {
+        try (ClassPathXmlApplicationContext classPathXmlApplicationContext = new ClassPathXmlApplicationContext(
+                "missing-template-test.xml", this.getClass())) {
+            fail("Exception must be thrown");
+        } catch (BeanDefinitionStoreException e) {
+            assertTrue(e.getCause() instanceof FileNotFoundException);
+        }
+    }
 }

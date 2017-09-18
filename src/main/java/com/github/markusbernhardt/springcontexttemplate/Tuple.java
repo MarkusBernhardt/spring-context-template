@@ -1,7 +1,5 @@
 package com.github.markusbernhardt.springcontexttemplate;
 
-import org.springframework.beans.factory.config.BeanDefinition;
-
 import java.util.Map;
 
 /**
@@ -13,8 +11,8 @@ public class Tuple<K, V> implements Map.Entry<K, V> {
     private V _v;
 
     public Tuple(K _k, V _v) {
-        this._k=_k;
-        this._v=_v;
+        this._k = _k;
+        this._v = _v;
     }
 
     @Override
